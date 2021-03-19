@@ -150,7 +150,6 @@ void sort_terms(int n)
 
 void find_prime(int n, int m, int d)
 {
-    static int loop = 0;
     int count = 0, max_count = 0;
     char group = 0, comb_num = 0;
 
@@ -203,10 +202,6 @@ void find_prime(int n, int m, int d)
     for (int g = 0; g <= n; g++) {
         for (int t = 0; t < out.comb_num[g]; t++) {
             if (out.comb_data[g][t][n] == '*') {
-                continue;
-            }
-
-            if (out.comb_data[g][t][n] == 'x') {
                 continue;
             }
 
