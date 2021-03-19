@@ -11,15 +11,17 @@
 #include <string.h>
 #include <algorithm>
 
-#define MAX_VAR_N 5
-#define MAX_ITM_N 32
+#define MAX_VAR_N 6
+#define MAX_ITM_N 64
 
-const char out_tbl[MAX_VAR_N * 2][3] = {"A", "B", "C", "D", "E", "A'", "B'", "C'", "D'", "E'"};
-const char bit_tbl[MAX_ITM_N] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5};
+const char out_tbl[MAX_VAR_N * 2][3] = {"A", "B", "C", "D", "E", "F", "A'", "B'", "C'", "D'", "E'", "F'"};
+const char bit_tbl[MAX_ITM_N] = {
+    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6
+};
 
 // Group - Term - Data
 typedef struct {
-    uint32_t term_mask;
     char term_num[MAX_VAR_N + 1][MAX_ITM_N];
     char term_data[MAX_VAR_N + 1][MAX_ITM_N][MAX_ITM_N];
     char comb_num[MAX_VAR_N + 1];
@@ -33,8 +35,6 @@ void load_data(int n, int m, int d)
 {
     for (int g = 0; g <= n; g++) {
         for (int i = 0; i < m + d; i++) {
-            out.term_mask |= (i < m) ? 0x01 << input[i] : 0x00;
-
             if (bit_tbl[input[i]] == g) {
                 int term = out.comb_num[g];
                 int temp = input[i];
@@ -118,8 +118,6 @@ void combine_terms(int n)
         }
     }
 
-    tmp.term_mask = out.term_mask;
-
     memcpy(&out, &tmp, sizeof(term_data_t));
 }
 
@@ -155,12 +153,6 @@ void find_prime(int n, int m, int d)
     static int loop = 0;
     int count = 0, max_count = 0;
     char group = 0, comb_num = 0;
-
-    if (!out.term_mask) {
-        return;
-    }
-
-    printf("LoopX %d: %08x ", loop++, out.term_mask);
 
     // find the term that contains a single minterm
     for (int i = 0; i < m; i++) {
@@ -202,8 +194,6 @@ void find_prime(int n, int m, int d)
                         }
                     }
                 }
-
-                out.term_mask &= ~(0x01 << found);
             }
         }
     }
@@ -257,12 +247,8 @@ void find_prime(int n, int m, int d)
                     }
                 }
             }
-
-            out.term_mask &= ~(0x01 << found);
         }
     }
-
-    printf("=> %08x\n", out.term_mask);
 }
 
 void check_terms(int n, int m, int d)
@@ -361,7 +347,7 @@ void show_output(int n)
 
                     if (out.comb_data[g][t][k] != '-') {
                         count++;
-                        printf("%s", out.comb_data[g][t][k] == '1' ? out_tbl[k] : out_tbl[k + 5]);
+                        printf("%s", out.comb_data[g][t][k] == '1' ? out_tbl[k] : out_tbl[k + MAX_VAR_N]);
                     }
                 }
             }
