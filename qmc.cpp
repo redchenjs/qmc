@@ -355,7 +355,7 @@ void print_data(int n)
 
 void show_output(int n)
 {
-    char empty = 1;
+    char count = 0;
 
     for (int g = 0; g <= n; g++) {
         for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
@@ -365,10 +365,10 @@ void show_output(int n)
             }
 
             if (out.comb_data[g][t][n] == 'x') {
-                if (!empty) {
-                    printf(" + ");
-                } else {
+                if (!count) {
                     printf("F = ");
+                } else {
+                    printf(" + ");
                 }
 
                 for (int k = 0; k < n; k++) {
@@ -377,7 +377,7 @@ void show_output(int n)
                     }
 
                     if (out.comb_data[g][t][k] != '-') {
-                        empty = 0;
+                        count++;
                         printf("%s", out.comb_data[g][t][k] == '1' ? out_tbl[k] : out_tbl[k + 5]);
                     }
                 }
@@ -385,11 +385,11 @@ void show_output(int n)
         }
     }
 
-    if (!empty) {
-        printf("\n");
-    } else if (n == 1) {
-        printf("1\n");
+    if (!count) {
+        printf("1");
     }
+
+    printf("\n");
 }
 
 int main(void)
@@ -400,9 +400,9 @@ int main(void)
     printf("-------------------------Input--------------------------\n");
     printf("=> N M D M{...} D{...}\n");
     printf("\n");
-    printf("=> N: Number of variables (MAX = %d)\n", MAX_VAR_N);
-    printf("=> M: Number of minterms (M + D <= %d)\n", 0x01 << MAX_VAR_N);
-    printf("=> D: Number of don't-care terms (M + D <= %d)\n", 0x01 << MAX_VAR_N);
+    printf("=> N: Number of variables (1 <= N <= %d)\n", MAX_VAR_N);
+    printf("=> M: Number of minterms (M >= 1, M + D <= %d)\n", 0x01 << MAX_VAR_N);
+    printf("=> D: Number of don't-care terms (D >= 0, M + D <= %d)\n", 0x01 << MAX_VAR_N);
     printf("=> M{...}: Minterms\n");
     printf("=> D{...}: Don't-care terms\n");
     printf("\n");
@@ -410,7 +410,7 @@ int main(void)
 
     scanf("%d %d %d", &n, &m, &d);
 
-    if (n < 1 || n > MAX_VAR_N || (m + d) > (0x01 << MAX_VAR_N)) {
+    if (n < 1 || n > MAX_VAR_N || m < 1 || d < 0 || (m + d) > (0x01 << MAX_VAR_N)) {
         printf("-------------------------Error--------------------------\n");
         return -1;
     }
