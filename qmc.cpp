@@ -38,7 +38,7 @@ void load_data(int n, int m, int d)
 {
     for (int g = 0; g <= n; g++) {
         for (int i = 0; i < m + d; i++) {
-            out.term_mask |= 0x01 << input[i];
+            out.term_mask |= (i < m) ? 0x01 << input[i] : 0x00;
 
             if (bit_tbl[input[i]] == g) {
                 int term = out.comb_num[g];
@@ -119,7 +119,6 @@ void combine_terms(int n)
             tmp.term_num[g][comb_num] = out.term_num[g][t];
 
             memcpy(tmp.comb_data[g][comb_num], out.comb_data[g][t], sizeof(out.comb_data[g][t]));
-            tmp.comb_data[g][comb_num][n] = 'm';
             tmp.comb_num[g]++;
         }
     }
@@ -159,10 +158,18 @@ void clear_terms(int n)
 
 void find_prime(int n, int m, int d)
 {
+    static int loop = 0;
     int count = 0, max_count = 0;
     char group = 0, comb_num = 0;
 
-    for (int i = 0; i < m + d; i++) {
+    if (!out.term_mask) {
+        return;
+    }
+
+    printf("Loop %d: %08x ", loop++, out.term_mask);
+
+    // find the term that contains a single minterm
+    for (int i = 0; i < m; i++) {
         count = 0;
 
         for (int g = 0; g <= n; g++) {
@@ -186,47 +193,31 @@ void find_prime(int n, int m, int d)
         if (count == 1) {
             out.comb_data[group][comb_num][n] = 'x';
 
-            for (int k = 0; k < out.term_num[group][comb_num]; k++) {
-                out.term_mask &= ~(0x01 << out.term_data[group][comb_num][k]);
-            }
-        }
-    }
+            for (int k0 = 0; k0 < out.term_num[group][comb_num]; k0++) {
+                int found = out.term_data[group][comb_num][k0];
 
-    for (int g0 = 0; g0 <= n; g0++) {
-        for (int num = 0, t0 = 0; num < out.comb_num[g0]; num++, t0++) {
-            if (out.comb_data[g0][t0][n] == '*') {
-                num--;
-                continue;
-            }
-
-            if (out.comb_data[g0][t0][n] != 'x') {
-                continue;
-            }
-
-            for (int k0 = 0; k0 < out.term_num[g0][t0]; k0++) {
-                for (int g1 = 0; g1 <= n; g1++) {
-                    for (int num = 0, t1 = 0; num < out.comb_num[g1]; num++, t1++) {
-                        if (out.comb_data[g1][t1][n] == '*') {
+                for (int g = 0; g <= n; g++) {
+                    for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
+                        if (out.comb_data[g][t][n] == '*') {
                             num--;
                             continue;
                         }
 
-                        if (out.comb_data[g1][t1][n] == 'x') {
-                            continue;
-                        }
-
-                        for (int k1 = 0; k1 < out.term_num[g1][t1]; k1++) {
-                            if (out.term_data[g1][t1][k1] == out.term_data[g0][t0][k0]) {
-                                out.term_data[g1][t1][k1] = 0xff;
+                        for (int k1 = 0; k1 < out.term_num[g][t]; k1++) {
+                            if (found == out.term_data[g][t][k1]) {
+                                out.term_data[g][t][k1] = -1;
                             }
                         }
                     }
                 }
+
+                out.term_mask &= ~(0x01 << found);
             }
         }
     }
 
-    max_count = -1, group = 0, comb_num = 0;
+    // find the term that contains most minterms
+    max_count = 0, group = 0, comb_num = 0;
     for (int g = 0; g <= n; g++) {
         for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
             if (out.comb_data[g][t][n] == '*') {
@@ -240,7 +231,7 @@ void find_prime(int n, int m, int d)
 
             count = 0;
             for (int k = 0; k < out.term_num[g][t]; k++) {
-                for (int i = 0; i < m + d; i++) {
+                for (int i = 0; i < m; i++) {
                     if (input[i] == out.term_data[g][t][k]) {
                         count++;
 
@@ -256,38 +247,63 @@ void find_prime(int n, int m, int d)
         }
     }
 
-    if (max_count != -1) {
+    if (max_count != 0) {
         out.comb_data[group][comb_num][n] = 'x';
 
-        for (int k = 0; k < out.term_num[group][comb_num]; k++) {
-            out.term_mask &= ~(0x01 << out.term_data[group][comb_num][k]);
+        for (int k0 = 0; k0 < out.term_num[group][comb_num]; k0++) {
+            int found = out.term_data[group][comb_num][k0];
+
+            for (int g = 0; g <= n; g++) {
+                for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
+                    if (out.comb_data[g][t][n] == '*') {
+                        num--;
+                        continue;
+                    }
+
+                    for (int k1 = 0; k1 < out.term_num[g][t]; k1++) {
+                        if (found == out.term_data[g][t][k1]) {
+                            out.term_data[g][t][k1] = -1;
+                        }
+                    }
+                }
+            }
+
+            out.term_mask &= ~(0x01 << found);
         }
     }
+
+    printf("=> %08x\n", out.term_mask);
 }
 
 void check_terms(int n, int m, int d)
 {
     for (int g = 0; g <= n; g++) {
-        for (int t = 0; t < out.comb_num[g]; t++) {
-            for (int i = m; i < m + d; i++) {
-                int combine = 0;
-                int temp = input[i];
+        int comb_num = out.comb_num[g];
 
-                for (int k = 0; k < n; k++) {
-                    char data = (temp & (0x01 << (n - 1))) ? '1' : '0';
+        for (int num = 0, t = 0; num < comb_num; num++, t++) {
+            if (out.comb_data[g][t][n] == '*') {
+                num--;
+                continue;
+            }
 
-                    if (data != out.comb_data[g][t][k]) {
-                        combine++;
+            int mterm = 0, dterm = 0;
+            for (int k = 0; k < out.term_num[g][t]; k++) {
+                for (int i = 0; i < m; i++) {
+                    if (input[i] == out.term_data[g][t][k]) {
+                        mterm++;
                     }
-
-                    temp <<= 1;
                 }
 
-                if (combine == 0) {
-                    out.comb_num[g]--;
-                    out.comb_data[g][t][n] = '*';
-                    out.term_mask &= ~(0x01 << out.term_data[g][t][0]);
+                for (int i = m; i < m + d; i++) {
+                    if (input[i] == out.term_data[g][t][k]) {
+                        dterm++;
+                    }
                 }
+            }
+
+            if (mterm == 0 && dterm != 0) {
+                out.comb_num[g]--;
+                out.comb_data[g][t][n] = '*';
             }
         }
     }
@@ -308,7 +324,7 @@ void print_terms(int n)
                 printf("%d ", out.term_data[g][t][k]);
             }
 
-            printf("\t");
+            printf("  ");
         }
 
         printf("\n");
@@ -330,63 +346,17 @@ void print_data(int n)
                 printf("%c ", out.comb_data[g][t][k]);
             }
 
-            printf("\t");
+            printf("  ");
         }
 
         printf("\n");
     }
 }
 
-int main(void)
+void show_output(int n)
 {
-    term_data_t test = {0};
-    int n = 0, m = 0, d = 0;
-
-    printf("-------------------------Input--------------------------\n");
-    printf("=> N M D M{...} D{...}\n");
-    printf("=> N: Number of variables (MAX=5)\n");
-    printf("=> M: Number of minterms (MAX=32)\n");
-    printf("=> D: Number of don't-care terms (MAX=32)\n");
-    printf("=> M{...}: Minterms\n");
-    printf("=> D{...}: Don't-care terms\n");
-
-    printf("=> ");
-
-    scanf("%d %d %d", &n, &m, &d);
-
-    for (int i = 0; i < m + d; i++) {
-        scanf("%d", &input[i]);
-    }
-
-    printf("------------------Step 1: Load Data---------------------\n");
-
-    load_data(n, m, d);
-
-    print_data(n);
-
-    printf("------------------Step 2: Combine Terms-----------------\n");
-
-    do {
-        memcpy(&test, &out, sizeof(term_data_t));
-
-        combine_terms(n);
-    } while (memcmp(&test, &out, sizeof(term_data_t)));
-
-    clear_terms(n);
-
-    check_terms(n, m, d);
-
-    print_data(n);
-
-    printf("------------------Step 3: Find Prime--------------------\n");
-
-    find_prime(n, m, d);
-
-    print_data(n);
-
-    printf("-------------------------Output-------------------------\n");
-
     char empty = 1;
+
     for (int g = 0; g <= n; g++) {
         for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
             if (out.comb_data[g][t][n] == '*') {
@@ -415,7 +385,76 @@ int main(void)
         }
     }
 
-    printf("\n");
+    if (!empty) {
+        printf("\n");
+    } else if (n == 1) {
+        printf("1\n");
+    }
+}
+
+int main(void)
+{
+    term_data_t test = {0};
+    int n = 0, m = 0, d = 0;
+
+    printf("-------------------------Input--------------------------\n");
+    printf("=> N M D M{...} D{...}\n");
+    printf("=> N: Number of variables (MAX = %d)\n", MAX_VAR_N);
+    printf("=> M: Number of minterms (M + D <= %d)\n", 0x01 << MAX_VAR_N);
+    printf("=> D: Number of don't-care terms (M + D <= %d)\n", 0x01 << MAX_VAR_N);
+    printf("=> M{...}: Minterms\n");
+    printf("=> D{...}: Don't-care terms\n");
+
+    printf("=> ");
+
+    scanf("%d %d %d", &n, &m, &d);
+
+    if (n < 1 || n > MAX_VAR_N || (m + d) > (0x01 << MAX_VAR_N)) {
+        printf("-------------------------Error--------------------------\n");
+        return -1;
+    }
+
+    for (int i = 0; i < m + d; i++) {
+        scanf("%d", &input[i]);
+    }
+
+    printf("------------------Step 1: Load Data---------------------\n");
+
+    load_data(n, m, d);
+
+    print_data(n);
+
+    printf("------------------Step 2: Combine Terms-----------------\n");
+
+    do {
+        memcpy(&test, &out, sizeof(term_data_t));
+
+        combine_terms(n);
+    } while (memcmp(&test, &out, sizeof(term_data_t)));
+
+    clear_terms(n);
+
+    print_data(n);
+
+    printf("------------------Step 3: Find Prime--------------------\n");
+
+    print_terms(n);
+
+    do {
+        memcpy(&test, &out, sizeof(term_data_t));
+
+        find_prime(n, m, d);
+    } while (memcmp(&test, &out, sizeof(term_data_t)));
+
+    printf("------------------Step 4: Check Terms-------------------\n");
+
+    check_terms(n, m, d);
+
+    print_data(n);
+
+    printf("-------------------------Output-------------------------\n");
+
+    show_output(n);
 
     return 0;
 }
