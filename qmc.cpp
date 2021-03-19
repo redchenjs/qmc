@@ -166,7 +166,7 @@ void find_prime(int n, int m, int d)
         return;
     }
 
-    printf("Loop %d: %08x ", loop++, out.term_mask);
+    printf("LoopX %d: %08x ", loop++, out.term_mask);
 
     // find the term that contains a single minterm
     for (int i = 0; i < m; i++) {
@@ -368,7 +368,7 @@ void show_output(int n)
                 if (!empty) {
                     printf(" + ");
                 } else {
-                    printf("=> F = ");
+                    printf("F = ");
                 }
 
                 for (int k = 0; k < n; k++) {
@@ -399,12 +399,13 @@ int main(void)
 
     printf("-------------------------Input--------------------------\n");
     printf("=> N M D M{...} D{...}\n");
+    printf("\n");
     printf("=> N: Number of variables (MAX = %d)\n", MAX_VAR_N);
     printf("=> M: Number of minterms (M + D <= %d)\n", 0x01 << MAX_VAR_N);
     printf("=> D: Number of don't-care terms (M + D <= %d)\n", 0x01 << MAX_VAR_N);
     printf("=> M{...}: Minterms\n");
     printf("=> D{...}: Don't-care terms\n");
-
+    printf("\n");
     printf("=> ");
 
     scanf("%d %d %d", &n, &m, &d);
