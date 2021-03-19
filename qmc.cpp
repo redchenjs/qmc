@@ -131,9 +131,9 @@ void combine_terms(int n)
 void clear_terms(int n)
 {
     for (int g = 0; g <= n; g++) {
-        int diff = 0;
-
         for (int t0 = 0; t0 < out.comb_num[g] - 1; t0++) {
+            int diff = 0;
+
             for (int t1 = t0 + 1; t1 < out.comb_num[g]; t1++) {
                 if (!memcmp(out.comb_data[g][t0], out.comb_data[g][t1], n)) {
                     for (int k = 0; k < out.term_num[g][t1]; k++) {
@@ -150,9 +150,9 @@ void clear_terms(int n)
                     diff++;
                 }
             }
-        }
 
-        out.comb_num[g] -= diff;
+            out.comb_num[g] -= diff;
+        }
     }
 }
 
