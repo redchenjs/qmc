@@ -29,11 +29,6 @@ typedef struct {
 term_data_t out = {0};
 char input[MAX_ITM_N] = {0};
 
-int sort_cmpfunc(const void *a, const void *b)
-{
-   return (*(char *)a - *(char *)b);
-}
-
 void load_data(int n, int m, int d)
 {
     for (int g = 0; g <= n; g++) {
@@ -128,7 +123,12 @@ void combine_terms(int n)
     memcpy(&out, &tmp, sizeof(term_data_t));
 }
 
-void clear_terms(int n)
+int sort_cmpfunc(const void *a, const void *b)
+{
+    return (*(char *)a - *(char *)b);
+}
+
+void sort_terms(int n)
 {
     for (int g = 0; g <= n; g++) {
         for (int t0 = 0; t0 < out.comb_num[g] - 1; t0++) {
@@ -433,7 +433,7 @@ int main(void)
         combine_terms(n);
     } while (memcmp(&test, &out, sizeof(term_data_t)));
 
-    clear_terms(n);
+    sort_terms(n);
 
     print_data(n);
 
