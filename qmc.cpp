@@ -88,8 +88,8 @@ void combine_terms(int n)
                             }
 
                             memcpy(tmp.comb_data[g][comb_num], out.comb_data[g + 1][t1], sizeof(out.comb_data[g][t0]));
+                            tmp.comb_data[g][comb_num][k] = '-';
                             tmp.comb_data[g][comb_num][n] = 'm';
-                            tmp.comb_data[g][comb_num++][k] = '-';
                             tmp.comb_num[g]++;
 
                             out.comb_data[g][t0][n] = '*';
@@ -132,8 +132,6 @@ void sort_terms(int n)
 {
     for (int g = 0; g <= n; g++) {
         for (int t0 = 0; t0 < out.comb_num[g] - 1; t0++) {
-            int diff = 0;
-
             for (int t1 = t0 + 1; t1 < out.comb_num[g]; t1++) {
                 if (!memcmp(out.comb_data[g][t0], out.comb_data[g][t1], n)) {
                     for (int k = 0; k < out.term_num[g][t1]; k++) {
@@ -146,12 +144,8 @@ void sort_terms(int n)
                     out.term_num[g][t0] = ret - out.term_data[g][t0];
 
                     out.comb_data[g][t1][n] = '*';
-
-                    diff++;
                 }
             }
-
-            out.comb_num[g] -= diff;
         }
     }
 }
@@ -173,9 +167,8 @@ void find_prime(int n, int m, int d)
         count = 0;
 
         for (int g = 0; g <= n; g++) {
-            for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
+            for (int t = 0; t < out.comb_num[g]; t++) {
                 if (out.comb_data[g][t][n] == '*') {
-                    num--;
                     continue;
                 }
 
@@ -197,9 +190,8 @@ void find_prime(int n, int m, int d)
                 int found = out.term_data[group][comb_num][k0];
 
                 for (int g = 0; g <= n; g++) {
-                    for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
+                    for (int t = 0; t < out.comb_num[g]; t++) {
                         if (out.comb_data[g][t][n] == '*') {
-                            num--;
                             continue;
                         }
 
@@ -219,9 +211,8 @@ void find_prime(int n, int m, int d)
     // find the term that contains most minterms
     max_count = 0, group = 0, comb_num = 0;
     for (int g = 0; g <= n; g++) {
-        for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
+        for (int t = 0; t < out.comb_num[g]; t++) {
             if (out.comb_data[g][t][n] == '*') {
-                num--;
                 continue;
             }
 
@@ -254,9 +245,8 @@ void find_prime(int n, int m, int d)
             int found = out.term_data[group][comb_num][k0];
 
             for (int g = 0; g <= n; g++) {
-                for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
+                for (int t = 0; t < out.comb_num[g]; t++) {
                     if (out.comb_data[g][t][n] == '*') {
-                        num--;
                         continue;
                     }
 
@@ -278,11 +268,8 @@ void find_prime(int n, int m, int d)
 void check_terms(int n, int m, int d)
 {
     for (int g = 0; g <= n; g++) {
-        int comb_num = out.comb_num[g];
-
-        for (int num = 0, t = 0; num < comb_num; num++, t++) {
+        for (int t = 0; t < out.comb_num[g]; t++) {
             if (out.comb_data[g][t][n] == '*') {
-                num--;
                 continue;
             }
 
@@ -302,7 +289,6 @@ void check_terms(int n, int m, int d)
             }
 
             if (mterm == 0 && dterm != 0) {
-                out.comb_num[g]--;
                 out.comb_data[g][t][n] = '*';
             }
         }
@@ -314,9 +300,8 @@ void print_terms(int n)
     for (int g = 0; g <= n; g++) {
         printf("Group %d: ", g);
 
-        for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
+        for (int t = 0; t < out.comb_num[g]; t++) {
             if (out.comb_data[g][t][n] == '*') {
-                num--;
                 continue;
             }
 
@@ -336,9 +321,8 @@ void print_data(int n)
     for (int g = 0; g <= n; g++) {
         printf("Group %d: ", g);
 
-        for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
+        for (int t = 0; t < out.comb_num[g]; t++) {
             if (out.comb_data[g][t][n] == '*') {
-                num--;
                 continue;
             }
 
@@ -358,9 +342,8 @@ void show_output(int n)
     char count = 0;
 
     for (int g = 0; g <= n; g++) {
-        for (int num = 0, t = 0; num < out.comb_num[g]; num++, t++) {
+        for (int t = 0; t < out.comb_num[g]; t++) {
             if (out.comb_data[g][t][n] == '*') {
-                num--;
                 continue;
             }
 
